@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="MyDay.API/MyDay.API.csproj" />
+  <Project Path="MyDay.Application/MyDay.Application.csproj" />
+  <Project Path="MyDay.Domain/MyDay.Domain.csproj" />
+  <Project Path="MyDay.Infrastructure/MyDay.Infrastructure.csproj" />
+</Solution>
