@@ -13,10 +13,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration
         .GetConnectionString("DefaultConnection")));
 
-// ── 2. AUTH SERVICE ──────────────────────────────────────
-// Register IAuthService → AuthService
-// When a controller asks for IAuthService, ASP.NET gives it AuthService
+// ── 2. SERVICE ───────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITodoService, TodoService>();
 
 // ── 3. JWT AUTHENTICATION ────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]!;
@@ -55,7 +54,7 @@ var app = builder.Build();
 // ── 6. MIDDLEWARE PIPELINE ───────────────────────────────
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
-app.UseAuthentication(); // ← NEW! Check JWT token
+app.UseAuthentication(); //  Check JWT token
 app.UseAuthorization();
 app.MapControllers();
 
