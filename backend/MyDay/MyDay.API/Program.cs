@@ -17,6 +17,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ── 2. SERVICE ───────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITodoService, TodoService>();
+builder.Services.AddScoped<IHabitService, HabitService>();
+builder.Services.AddScoped<IGoalService, GoalService>();
 
 // ── 3. JWT AUTHENTICATION ────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]!;
