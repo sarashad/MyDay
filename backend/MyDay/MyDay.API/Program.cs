@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using MyDay.Application.Interfaces;
 using MyDay.Application.Services;
 using MyDay.Infrastructure.Data;
+using Scalar.AspNetCore;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +39,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // ── 4. CONTROLLERS ───────────────────────────────────────
 builder.Services.AddControllers();
 
+builder.Services.AddOpenApi();
+
 // ── 5. CORS ──────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
@@ -53,6 +56,8 @@ var app = builder.Build();
 
 // ── 6. MIDDLEWARE PIPELINE ───────────────────────────────
 app.UseHttpsRedirection();
+app.MapOpenApi();              
+app.MapScalarApiReference();
 app.UseCors("AllowFrontend");
 app.UseAuthentication(); //  Check JWT token
 app.UseAuthorization();
