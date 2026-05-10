@@ -183,25 +183,25 @@ GoalSteps
 ## 📅 Build Progress
 
 ### ✅ Setup & Infrastructure
-- [ ] Visual Studio 2026 installed
-- [ ] SQL Server 2025 installed
-- [ ] SSMS installed
-- [ ] Node.js installed
-- [ ] VS Code installed
-- [ ] GitHub repository created
-- [ ] Solution & projects created (Clean Architecture)
-- [ ] Database connection configured
-- [ ] EF Core migrations working
+- [x] Visual Studio 2026 installed
+- [x] SQL Server 2025 installed
+- [x] SSMS installed
+- [x] Node.js installed
+- [x] VS Code installed
+- [x] GitHub repository created
+- [x] Solution & projects created (Clean Architecture)
+- [x] Database connection configured
+- [x] EF Core migrations working
 
 ### 🔐 Authentication
-- [ ] User entity & registration
+- [x] User entity & registration
 - [ ] Password hashing
 - [ ] JWT token generation
 - [ ] Login endpoint
 - [ ] Auth middleware (protect routes)
 
 ### ✅ Todos (Backend)
-- [ ] Todo entity & migration
+- [x] Todo entity & migration
 - [ ] GET all todos
 - [ ] POST create todo
 - [ ] PUT update todo
@@ -209,7 +209,7 @@ GoalSteps
 - [ ] DELETE todo
 
 ### 💪 Habits (Backend)
-- [ ] Habit entity & migration
+- [x] Habit entity & migration
 - [ ] GET all habits
 - [ ] POST create habit
 - [ ] POST log habit for today
@@ -217,7 +217,7 @@ GoalSteps
 - [ ] DELETE habit
 
 ### 🎯 Goals (Backend)
-- [ ] Goal & GoalStep entities
+- [x] Goal & GoalStep entities
 - [ ] GET all goals
 - [ ] POST create goal with steps
 - [ ] PATCH complete a step
