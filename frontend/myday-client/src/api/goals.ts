@@ -17,6 +17,11 @@ export const goalsApi = {
     return response.data
   },
 
+  update: async (id: number, data: any): Promise<Goal> => {
+  const response = await api.put<Goal>(`/goal/${id}`, data)
+  return response.data
+},
+
   delete: async (id: number): Promise<void> => {
     await api.delete(`/goal/${id}`)
   },
