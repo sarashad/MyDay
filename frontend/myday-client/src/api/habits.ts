@@ -17,6 +17,11 @@ export const habitsApi = {
     return response.data
   },
 
+  undoToday: async (id: number): Promise<Habit> => {
+    const response = await api.post<Habit>(`/habit/${id}/undo`)
+    return response.data
+  },
+
   delete: async (id: number): Promise<void> => {
     await api.delete(`/habit/${id}`)
   },

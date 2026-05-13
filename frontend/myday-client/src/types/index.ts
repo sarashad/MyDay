@@ -55,14 +55,17 @@ export interface Habit {
   id: number
   name: string
   icon?: string
+  targetCount: number    
   createdAt: string
   currentStreak: number
   completedToday: boolean
+  todayCount: number    
 }
 
 export interface CreateHabitRequest {
   name: string
   icon?: string
+  targetCount: number   
 }
 
 // ── GOAL ──────────────────────────────────────────────────

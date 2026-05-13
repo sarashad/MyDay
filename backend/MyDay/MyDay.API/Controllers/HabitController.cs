@@ -82,4 +82,19 @@ public class HabitController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    // POST /api/habit/{id}/undo
+    [HttpPost("{id}/undo")]
+    public async Task<IActionResult> UndoToday(int id)
+    {
+        try
+        {
+            var result = await _habitService.UndoTodayAsync(id, GetUserId());
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

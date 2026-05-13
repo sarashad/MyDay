@@ -34,6 +34,7 @@ public class HabitService : IHabitService
         {
             Name = dto.Name,
             Icon = dto.Icon,
+            TargetCount = dto.TargetCount > 0 ? dto.TargetCount : 1,
             UserId = userId
         };
 
@@ -56,24 +57,36 @@ public class HabitService : IHabitService
 
         var today = DateTime.UtcNow.Date;
 
-        // Check if already logged today
-        var alreadyLogged = habit.Logs.Any(l => l.CompletedDate.Date == today);
-        if (alreadyLogged)
-            throw new Exception("Habit already logged for today.");
+        // Find today's log if exists
+        var todayLog = habit.Logs.FirstOrDefault(l => l.CompletedDate.Date == today);
 
-        var log = new HabitLog
+        if (todayLog != null)
         {
-            HabitId = habitId,
-            CompletedDate = DateTime.UtcNow,
-            Note = dto.Note
-        };
+            // Already has a log today → increment count
+            todayLog.Count++;
+            await _db.SaveChangesAsync();
+        }
+        else
+        {
+            // No log today → create new log with count = 1
+            var log = new HabitLog
+            {
+                HabitId = habitId,
+                CompletedDate = DateTime.UtcNow,
+                Note = dto.Note,
+                Count = 1
+            };
+            _db.HabitLogs.Add(log);
+            await _db.SaveChangesAsync();
+            habit.Logs.Add(log);
+        }
 
-        _db.HabitLogs.Add(log);
-        await _db.SaveChangesAsync();
+        // Reload updated habit
+        var updated = await _db.Habits
+            .Include(h => h.Logs)
+            .FirstAsync(h => h.Id == habitId);
 
-        // Reload habit with updated logs
-        habit.Logs.Add(log);
-        return ToDto(habit);
+        return ToDto(updated);
     }
 
     // ── DELETE ───────────────────────────────────────────
@@ -89,28 +102,65 @@ public class HabitService : IHabitService
         await _db.SaveChangesAsync();
     }
 
+    // ── UNDO ─────────────────────────────────────────────
+    public async Task<HabitDto> UndoTodayAsync(int habitId, int userId)
+    {
+        var habit = await _db.Habits
+            .Include(h => h.Logs)
+            .FirstOrDefaultAsync(h => h.Id == habitId && h.UserId == userId);
+
+        if (habit == null)
+            throw new Exception("Habit not found.");
+
+        var today = DateTime.UtcNow.Date;
+        var todayLog = habit.Logs.FirstOrDefault(l => l.CompletedDate.Date == today);
+
+        if (todayLog != null)
+        {
+            if (todayLog.Count > 1)
+                todayLog.Count--; // reduce count by 1
+            else
+                _db.HabitLogs.Remove(todayLog); // remove log entirely
+
+            await _db.SaveChangesAsync();
+        }
+
+        var updated = await _db.Habits
+            .Include(h => h.Logs)
+            .FirstAsync(h => h.Id == habitId);
+
+        return ToDto(updated);
+    }
+
     // ── HELPER ───────────────────────────────────────────
     private static HabitDto ToDto(Habit h)
     {
         var today = DateTime.UtcNow.Date;
 
-        // Calculate streak — how many consecutive days completed
+        // Calculate streak
         var streak = 0;
         var checkDate = today;
-        while (h.Logs.Any(l => l.CompletedDate.Date == checkDate))
+        while (h.Logs.Any(l => l.CompletedDate.Date == checkDate &&
+               l.Count >= h.TargetCount))
         {
             streak++;
             checkDate = checkDate.AddDays(-1);
         }
+
+        // Today's count
+        var todayLog = h.Logs.FirstOrDefault(l => l.CompletedDate.Date == today);
+        var todayCount = todayLog?.Count ?? 0;
 
         return new HabitDto
         {
             Id = h.Id,
             Name = h.Name,
             Icon = h.Icon,
+            TargetCount = h.TargetCount,
             CreatedAt = h.CreatedAt,
             CurrentStreak = streak,
-            CompletedToday = h.Logs.Any(l => l.CompletedDate.Date == today)
+            TodayCount = todayCount,
+            CompletedToday = todayCount >= h.TargetCount
         };
     }
 }

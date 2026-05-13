@@ -5,9 +5,10 @@
 public class Habit
 {
     public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;        // e.g. "Morning sport"
-    public string? Icon { get; set; }                       // Optional emoji e.g. "💪"
+    public string Name { get; set; } = string.Empty;        
+    public string? Icon { get; set; }                       
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int TargetCount { get; set; } = 1; 
 
     // Every habit belongs to one User
     public int UserId { get; set; }
