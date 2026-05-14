@@ -14,20 +14,21 @@
 | ASP.NET Core | 9 | Web API Framework |
 | Entity Framework Core | 9 | ORM / Database access |
 | SQL Server | 2025 | Database |
-| JWT Bearer | latest | Authentication |
-| FluentValidation | latest | Input validation |
+| JWT Bearer | 9.0.4 | Authentication |
+| BCrypt.Net | 4.1.0 | Password hashing |
 | Scalar | latest | API documentation |
 
 ### Frontend
 | Technology | Version | Purpose |
 |-----------|---------|---------|
-| React | 19 | UI Framework |
-| TypeScript | 5.x | Type safety |
-| Vite | latest | Build tool |
-| TanStack Query | v5 | API calls & caching |
-| Zustand | latest | State management |
-| Tailwind CSS | v4 | Styling |
-| React Router | v7 | Navigation |
+| React | 19.2.6 | UI Framework |
+| TypeScript | 6.0.3 | Type safety |
+| Vite | 8.0.11 | Build tool |
+| TanStack Query | v5.100.9 | API calls & caching |
+| Zustand | 5.0.13 | State management |
+| Tailwind CSS | v4.3.0 | Styling |
+| React Router | v7.15.0 | Navigation |
+| Axios | 1.16.0 | HTTP client |
 
 ---
 
@@ -37,51 +38,34 @@
 MyDay/
 │
 ├── 📂 backend/
-│   └── MyDay.sln
+│   └── MyDay/
 │       ├── MyDay.API/                  ← ASP.NET Core Web API
-│       │   ├── Controllers/            ← API endpoints (TodoController, HabitController...)
-│       │   ├── Middleware/             ← Error handling, logging
+│       │   ├── Controllers/            ← AuthController, TodoController, HabitController, GoalController
+│       │   ├── Middleware/             ← Error handling
 │       │   ├── Program.cs              ← App entry point
-│       │   └── appsettings.json        ← Configuration (DB connection, JWT...)
+│       │   └── appsettings.json        ← DB connection, JWT config
 │       │
 │       ├── MyDay.Application/          ← Business logic layer
-│       │   ├── Services/               ← TodoService, HabitService, GoalService...
-│       │   ├── DTOs/                   ← Data Transfer Objects (what API sends/receives)
+│       │   ├── Services/               ← AuthService, TodoService, HabitService, GoalService
+│       │   ├── DTOs/                   ← Request/Response models
 │       │   └── Interfaces/             ← Service contracts
 │       │
 │       ├── MyDay.Domain/               ← Core entities (no dependencies)
-│       │   └── Entities/               ← Todo.cs, Habit.cs, Goal.cs, User.cs
+│       │   └── Entities/               ← User, Todo, Habit, HabitLog, Goal, GoalStep
 │       │
 │       └── MyDay.Infrastructure/       ← Data access layer
-│           ├── Data/
-│           │   └── AppDbContext.cs     ← Entity Framework DbContext
-│           ├── Repositories/           ← Database queries
-│           └── Migrations/             ← EF Core migrations (auto-generated)
+│           ├── Data/AppDbContext.cs     ← EF Core DbContext
+│           └── Migrations/             ← EF Core migrations
 │
-├── 📂 frontend/
-│   └── myday-client/                   ← React + TypeScript (Vite)
-│       ├── src/
-│       │   ├── api/                    ← API call functions
-│       │   ├── components/             ← Reusable UI components
-│       │   │   ├── todo/
-│       │   │   ├── habit/
-│       │   │   ├── goal/
-│       │   │   └── shared/
-│       │   ├── pages/                  ← Full pages
-│       │   │   ├── Dashboard.tsx
-│       │   │   ├── Todos.tsx
-│       │   │   ├── Habits.tsx
-│       │   │   ├── Goals.tsx
-│       │   │   └── Login.tsx
-│       │   ├── store/                  ← Zustand global state
-│       │   ├── types/                  ← TypeScript interfaces
-│       │   ├── hooks/                  ← Custom React hooks
-│       │   └── App.tsx                 ← Root component + routing
-│       ├── index.html
-│       └── vite.config.ts
-│
-└── 📂 docs/                            ← Screenshots, diagrams (for GitHub)
-    └── screenshots/
+└── 📂 frontend/
+    └── myday-client/                   ← React + TypeScript (Vite)
+        └── src/
+            ├── api/                    ← axios, auth, todos, habits, goals
+            ├── components/             ← Layout, shared components
+            ├── pages/                  ← Dashboard, Todos, Habits, Goals, Login, Register
+            ├── store/                  ← Zustand auth store
+            ├── types/                  ← TypeScript interfaces
+            └── App.tsx                 ← Root component + routing
 ```
 
 ---
@@ -89,51 +73,12 @@ MyDay/
 ## 🗄️ Database Schema
 
 ```
-Users
-├── Id (int, PK)
-├── Email (string, unique)
-├── PasswordHash (string)
-├── FirstName (string)
-└── CreatedAt (datetime)
-
-Todos
-├── Id (int, PK)
-├── UserId (int, FK → Users)
-├── Title (string)
-├── Description (string, optional)
-├── IsCompleted (bool)
-├── Priority (enum: Low / Medium / High)
-├── DueDate (datetime, optional)
-└── CreatedAt (datetime)
-
-Habits
-├── Id (int, PK)
-├── UserId (int, FK → Users)
-├── Name (string)
-├── Icon (string, optional)
-├── FrequencyDays (int, e.g. every day = 1)
-└── CreatedAt (datetime)
-
-HabitLogs
-├── Id (int, PK)
-├── HabitId (int, FK → Habits)
-├── CompletedDate (date)
-└── Note (string, optional)
-
-Goals
-├── Id (int, PK)
-├── UserId (int, FK → Users)
-├── Title (string)
-├── Description (string, optional)
-├── Deadline (datetime, optional)
-├── IsCompleted (bool)
-└── CreatedAt (datetime)
-
-GoalSteps
-├── Id (int, PK)
-├── GoalId (int, FK → Goals)
-├── Title (string)
-└── IsCompleted (bool)
+Users         → Id, Email (unique), PasswordHash, FirstName, CreatedAt
+Todos         → Id, UserId (FK), Title, Description, IsCompleted, Priority, DueDate, CreatedAt
+Habits        → Id, UserId (FK), Name, Icon, TargetCount, CreatedAt
+HabitLogs     → Id, HabitId (FK), CompletedDate, Count, Note
+Goals         → Id, UserId (FK), Title, Description, Deadline, IsCompleted, CreatedAt
+GoalSteps     → Id, GoalId (FK), Title, IsCompleted
 ```
 
 ---
@@ -144,39 +89,67 @@ GoalSteps
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login, get JWT token |
+| POST | `/api/auth/login` | Login, returns JWT token |
 
 ### Todos
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/todos` | Get all my todos |
-| POST | `/api/todos` | Create new todo |
-| PUT | `/api/todos/{id}` | Update todo |
-| PATCH | `/api/todos/{id}/complete` | Mark as done |
-| DELETE | `/api/todos/{id}` | Delete todo |
+| GET | `/api/todo` | Get all my todos |
+| POST | `/api/todo` | Create new todo |
+| PUT | `/api/todo/{id}` | Update todo |
+| PATCH | `/api/todo/{id}/complete` | Toggle complete |
+| DELETE | `/api/todo/{id}` | Delete todo |
 
 ### Habits
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/habits` | Get all my habits |
-| POST | `/api/habits` | Create new habit |
-| POST | `/api/habits/{id}/log` | Check habit for today |
-| GET | `/api/habits/{id}/streak` | Get current streak |
-| DELETE | `/api/habits/{id}` | Delete habit |
+| GET | `/api/habit` | Get all my habits |
+| POST | `/api/habit` | Create new habit |
+| POST | `/api/habit/{id}/log` | Log habit for today (+1 count) |
+| POST | `/api/habit/{id}/undo` | Undo last log |
+| DELETE | `/api/habit/{id}` | Delete habit |
 
 ### Goals
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/goals` | Get all my goals |
-| POST | `/api/goals` | Create new goal |
-| PUT | `/api/goals/{id}` | Update goal |
-| PATCH | `/api/goals/{id}/steps/{stepId}` | Complete a step |
-| DELETE | `/api/goals/{id}` | Delete goal |
+| GET | `/api/goal` | Get all my goals |
+| POST | `/api/goal` | Create new goal with steps |
+| PUT | `/api/goal/{id}` | Update goal |
+| PATCH | `/api/goal/{goalId}/steps/{stepId}` | Toggle step complete |
+| DELETE | `/api/goal/{id}` | Delete goal |
 
-### Dashboard
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/dashboard` | Get today's summary (todos + habits + goals) |
+---
+
+## ✨ Features
+
+- 🔐 JWT Authentication (register, login, protected routes)
+- ✅ **Todos** — daily planner with date filter, priority sorting (High/Medium/Low), expired detection, edit
+- 💪 **Habits** — daily count targets, progress bar, streak tracking, undo support
+- 🎯 **Goals** — step-by-step progress, auto-complete when all steps done, edit
+- 📊 **Dashboard** — today's overview with stats, habit status, goal progress
+- 🎨 Color-coded priorities (Red/Orange/Yellow), Purple for expired, Green for completed
+
+---
+
+## 🛠️ How to Run Locally
+
+### Backend
+```bash
+cd backend/MyDay/MyDay.API
+dotnet restore
+dotnet ef database update --project ../MyDay.Infrastructure/MyDay.Infrastructure.csproj --startup-project MyDay.API.csproj
+dotnet run
+```
+API: `https://localhost:7299`  
+Scalar docs: `https://localhost:7299/scalar`
+
+### Frontend
+```bash
+cd frontend/myday-client
+npm install
+npm run dev
+```
+App: `http://localhost:5173`
 
 ---
 
@@ -185,95 +158,56 @@ GoalSteps
 ### ✅ Setup & Infrastructure
 - [x] Visual Studio 2026 installed
 - [x] SQL Server 2025 installed
-- [x] SSMS installed
-- [x] Node.js installed
-- [x] VS Code installed
+- [x] Node.js & VS Code installed
 - [x] GitHub repository created
-- [x] Solution & projects created (Clean Architecture)
-- [x] Database connection configured
+- [x] Clean Architecture solution (4 projects)
 - [x] EF Core migrations working
 
 ### 🔐 Authentication
 - [x] User entity & registration
-- [ ] Password hashing
-- [ ] JWT token generation
-- [ ] Login endpoint
-- [ ] Auth middleware (protect routes)
+- [x] Password hashing (BCrypt)
+- [x] JWT token generation
+- [x] Login endpoint
+- [x] Auth middleware (protect routes)
 
-### ✅ Todos (Backend)
+### ✅ Todos
 - [x] Todo entity & migration
-- [ ] GET all todos
-- [ ] POST create todo
-- [ ] PUT update todo
-- [ ] PATCH mark as complete
-- [ ] DELETE todo
+- [x] GET / POST / PUT / PATCH / DELETE
+- [x] Date filter & expired detection
+- [x] Priority sorting & color coding
+- [x] Edit inline
 
-### 💪 Habits (Backend)
+### 💪 Habits
 - [x] Habit entity & migration
-- [ ] GET all habits
-- [ ] POST create habit
-- [ ] POST log habit for today
-- [ ] GET streak calculation
-- [ ] DELETE habit
+- [x] GET / POST / DELETE
+- [x] Daily count target & progress bar
+- [x] Streak calculation
+- [x] Log & undo support
 
-### 🎯 Goals (Backend)
+### 🎯 Goals
 - [x] Goal & GoalStep entities
-- [ ] GET all goals
-- [ ] POST create goal with steps
-- [ ] PATCH complete a step
-- [ ] Auto-complete goal when all steps done
-- [ ] DELETE goal
+- [x] GET / POST / PUT / DELETE
+- [x] Step completion & auto-complete
+- [x] Progress bar & percentage
+- [x] Edit inline
 
-### 📊 Dashboard (Backend)
-- [ ] GET today's todos count
-- [ ] GET today's habits status
-- [ ] GET active goals progress
-
-### ⚛️ Frontend Setup
-- [ ] Vite + React + TypeScript project created
-- [ ] Tailwind CSS v4 configured
-- [ ] React Router v7 configured
-- [ ] Zustand store setup
-- [ ] TanStack Query setup
-- [ ] API base configuration (axios/fetch)
-
-### 🎨 Frontend Pages
-- [ ] Login / Register page
-- [ ] Dashboard page
-- [ ] Todos page (list, add, edit, delete)
-- [ ] Habits page (list, add, check-off, streak)
-- [ ] Goals page (list, add, steps, progress)
+### ⚛️ Frontend
+- [x] Vite + React + TypeScript
+- [x] Tailwind CSS v4
+- [x] React Router v7
+- [x] Zustand auth store
+- [x] TanStack Query
+- [x] Login / Register pages
+- [x] Dashboard page
+- [x] Todos page
+- [x] Habits page
+- [x] Goals page
 
 ### 🏁 Final Steps
-- [ ] Error handling (frontend + backend)
-- [ ] Loading states & empty states
-- [ ] Responsive design (mobile friendly)
 - [ ] Unit tests (backend services)
-- [ ] README screenshots added
+- [ ] Screenshots added to README
 - [ ] Deploy backend (Railway.app)
 - [ ] Deploy frontend (Vercel)
-
----
-
-## 🛠️ How to Run Locally
-
-### Backend
-```bash
-cd backend/MyDay.API
-dotnet restore
-dotnet ef database update
-dotnet run
-```
-API runs at: `https://localhost:5001`  
-Scalar API docs: `https://localhost:5001/scalar`
-
-### Frontend
-```bash
-cd frontend/myday-client
-npm install
-npm run dev
-```
-App runs at: `http://localhost:5173`
 
 ---
 
@@ -284,4 +218,4 @@ App runs at: `http://localhost:5173`
 
 ## 👩‍💻 Author
 **Sara Shadabi** — Full-Stack .NET Developer  
-[LinkedIn](https://linkedin.com/in/sara-shadabi) • [GitHub](https://github.com/)
+[LinkedIn](https://linkedin.com/in/sara-shadabi) • [GitHub](https://github.com/sarashad/MyDay)
