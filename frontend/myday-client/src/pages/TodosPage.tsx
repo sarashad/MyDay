@@ -11,6 +11,11 @@ export default function TodosPage() {
   const [priority, setPriority] = useState<number>(Priority.Medium)
   const [showForm, setShowForm] = useState(false)
   const [showExpired, setShowExpired] = useState(false)
+  const [editingTodo, setEditingTodo] = useState<number | null>(null)
+const [editTitle, setEditTitle] = useState('')
+const [editDescription, setEditDescription] = useState('')
+const [editPriority, setEditPriority] = useState<number>(Priority.Medium)
+const [editDueDate, setEditDueDate] = useState('')
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   )
@@ -40,6 +45,14 @@ export default function TodosPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
   })
 
+  const updateMutation = useMutation({
+  mutationFn: ({ id, data }: { id: number; data: any }) => todosApi.update(id, data),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['todos'] })
+    setEditingTodo(null)
+  },
+})
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
@@ -51,11 +64,34 @@ export default function TodosPage() {
     })
   }
 
+  const handleEdit = (todo: any) => {
+  setEditingTodo(todo.id)
+  setEditTitle(todo.title)
+  setEditDescription(todo.description || '')
+  setEditPriority(todo.priority)
+  setEditDueDate(todo.dueDate ? todo.dueDate.split('T')[0] : '')
+}
+
+const handleUpdate = (e: React.FormEvent) => {
+  e.preventDefault()
+  if (!editingTodo) return
+  updateMutation.mutate({
+    id: editingTodo,
+    data: {
+      title: editTitle,
+      description: editDescription || undefined,
+      priority: editPriority,
+      dueDate: editDueDate ? editDueDate + 'T00:00:00' : undefined
+    }
+  })
+}
+
   const today = new Date().toISOString().split('T')[0]
 
   const getEffectiveDate = (todo: { dueDate?: string; createdAt: string }) => {
-    return todo.createdAt.split('T')[0]
-  }
+  if (todo.dueDate) return todo.dueDate.split('T')[0]
+  return todo.createdAt.split('T')[0]
+}
 
   const { expiredTodos, selectedDayTodos, completedTodos } = useMemo(() => {
     if (!todos) return { expiredTodos: [], selectedDayTodos: [], completedTodos: [] }
@@ -116,31 +152,64 @@ export default function TodosPage() {
       </button>
 
       {/* Title + Description */}
-      <div className="flex-1">
-        <span className={`font-medium ${
-          todo.isCompleted
-            ? 'line-through text-gray-400'
-            : expired
-            ? 'text-purple-700'
-            : 'text-gray-800'
-        }`}>
-          {todo.title}
-        </span>
-        {todo.description && (
-          <p className="text-xs text-gray-500 mt-0.5">{todo.description}</p>
-        )}
-        {expired && (
-          <p className="text-xs text-purple-500 mt-0.5">
-            ⚠️ Was due on {formatDate(getEffectiveDate(todo))}
-          </p>
-        )}
-      </div>
+      {editingTodo === todo.id ? (
+  <form onSubmit={handleUpdate} className="flex-1 flex flex-col gap-2 mr-2">
+    <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+      className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+    <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)}
+      placeholder="Description"
+      className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+    <div className="flex gap-2">
+      <select value={editPriority} onChange={(e) => setEditPriority(Number(e.target.value))}
+        className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+        <option value={Priority.Low}>Low</option>
+        <option value={Priority.Medium}>Medium</option>
+        <option value={Priority.High}>High</option>
+      </select>
+      <input type="date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)}
+        className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+    </div>
+    <div className="flex gap-2">
+      <button type="submit"
+        className="bg-violet-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-violet-700">
+        Save
+      </button>
+      <button type="button" onClick={() => setEditingTodo(null)}
+        className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-200">
+        Cancel
+      </button>
+    </div>
+  </form>
+) : (
+  <div className="flex-1">
+    <span className={`font-medium ${
+      todo.isCompleted ? 'line-through text-gray-400'
+      : expired ? 'text-purple-700' : 'text-gray-800'
+    }`}>
+      {todo.title}
+    </span>
+    {todo.description && (
+      <p className="text-xs text-gray-500 mt-0.5">{todo.description}</p>
+    )}
+    {expired && (
+      <p className="text-xs text-purple-500 mt-0.5">
+        ⚠️ Was due on {formatDate(getEffectiveDate(todo))}
+      </p>
+    )}
+  </div>
+)}
 
       {/* Priority badge */}
       <span className={`text-xs font-medium px-2 py-1 rounded-full ${priorityLabel(todo.priority).color}`}>
         {priorityLabel(todo.priority).label}
       </span>
-
+{/* Edit */}
+{editingTodo !== todo.id && (
+  <button onClick={() => handleEdit(todo)}
+    className="text-gray-400 hover:text-violet-500 transition text-sm">
+    ✏️
+  </button>
+)}
       {/* Delete */}
       <button
         onClick={() => deleteMutation.mutate(todo.id)}
