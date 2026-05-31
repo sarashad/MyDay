@@ -21,6 +21,9 @@ public class AppDbContext : DbContext
     public DbSet<HabitLog> HabitLogs { get; set; }
     public DbSet<Goal> Goals { get; set; }
     public DbSet<GoalStep> GoalSteps { get; set; }
+    public DbSet<DailySpark> DailySparks { get; set; }
+    public DbSet<SparkStreak> SparkStreaks { get; set; }
+    public DbSet<SparkBadge> SparkBadges { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

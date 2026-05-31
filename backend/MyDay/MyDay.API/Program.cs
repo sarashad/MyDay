@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MyDay.Application.Interfaces;
 using MyDay.Application.Services;
+using MyDay.Domain.Interfaces;
+using MyDay.Infrastructure.AI;
 using MyDay.Infrastructure.Data;
 using Scalar.AspNetCore;
 using System.Text;
@@ -54,9 +56,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ── 6. AI ──────────────────────────────────────────────
+builder.Services.AddHttpClient<IAIProvider, GeminiProvider>();
+//builder.Services.AddHttpClient<IAIProvider, OpenAIProvider>();
+
 var app = builder.Build();
 
-// ── 6. MIDDLEWARE PIPELINE ───────────────────────────────
+// ── 7. MIDDLEWARE PIPELINE ───────────────────────────────
 app.UseHttpsRedirection();
 app.MapOpenApi();              
 app.MapScalarApiReference();
