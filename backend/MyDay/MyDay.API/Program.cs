@@ -21,6 +21,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITodoService, TodoService>();
 builder.Services.AddScoped<IHabitService, HabitService>();
 builder.Services.AddScoped<IGoalService, GoalService>();
+builder.Services.AddScoped<ISparkService, SparkService>();
 
 // ── 3. JWT AUTHENTICATION ────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]!;
