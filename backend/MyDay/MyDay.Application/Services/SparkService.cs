@@ -45,7 +45,18 @@ public class SparkService : ISparkService
             streak?.CurrentStreak ?? 0,
             user?.FirstName
         );
-        var aiResult = await _ai.GenerateDailySparkAsync(context);
+
+        AISparkResult aiResult;
+        try
+        {
+            aiResult = await _ai.GenerateDailySparkAsync(context);
+        }
+        catch
+        {
+            aiResult = GetFallbackSpark(streak?.CurrentStreak ?? 0);
+        }
+
+
 
         // Save new spark
         var spark = new DailySpark
@@ -118,6 +129,40 @@ public class SparkService : ISparkService
         }
 
         return result;
+    }
+
+    private static AISparkResult GetFallbackSpark(int streak)
+    {
+        var tasks = new[]
+        {
+        "Drink 8 glasses of water today.",
+        "Take a 10-minute walk outside.",
+        "Write down 3 things you're grateful for.",
+        "Read for 15 minutes today.",
+        "Organize your workspace for 5 minutes.",
+        "Call or message someone you care about.",
+        "Do 10 minutes of stretching.",
+        "Plan tomorrow's top 3 priorities.",
+        "Take 5 deep breaths and reset your focus.",
+        "Learn one new thing today!"
+    };
+
+        var messages = new[]
+        {
+        "Small steps lead to big changes. Keep going!",
+        "You're building something great, one day at a time.",
+        "Consistency is your superpower. Use it!",
+        "Every effort counts, no matter how small.",
+        "Today is a fresh start. Make it count!",
+        "Progress, not perfection. You've got this!",
+        "The best time to start is now.",
+        "You're closer to your goals than you think.",
+        "One good habit can change everything.",
+        "Believe in the power of your daily actions."
+    };
+
+        var index = DateTime.UtcNow.DayOfYear % tasks.Length;
+        return new AISparkResult(tasks[index], messages[index]);
     }
 
     // ── Private helpers ──────────────────────────────────────

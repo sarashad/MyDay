@@ -60,6 +60,7 @@ builder.Services.AddCors(options =>
 // ── 6. AI ──────────────────────────────────────────────
 builder.Services.AddHttpClient<IAIProvider, GeminiProvider>();
 //builder.Services.AddHttpClient<IAIProvider, OpenAIProvider>();
+//builder.Services.AddScoped<IAIProvider, GeminiProvider>();
 
 var app = builder.Build();
 

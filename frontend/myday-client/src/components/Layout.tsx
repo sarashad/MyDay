@@ -11,7 +11,7 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex flex-col h-screen overflow-hidden">
 
       {/* Navigation bar */}
       <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -58,10 +58,11 @@ export default function Layout() {
       </nav>
 
       {/* Page content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <Outlet />
-      </main>
-
+      <main className="flex-1 overflow-hidden">
+  <div className="px-6 py-4 h-full">
+    <Outlet />
+  </div>
+</main>
     </div>
   )
 }

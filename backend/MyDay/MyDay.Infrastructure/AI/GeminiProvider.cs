@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
-using MyDay.Domain.Interfaces;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
+using MyDay.Domain.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace MyDay.Infrastructure.AI;
 
@@ -21,12 +21,13 @@ public class GeminiProvider : IAIProvider
     public async Task<AISparkResult> GenerateDailySparkAsync(SparkContext ctx)
     {
         var prompt = $$"""
-    User info: name={{ctx.UserFirstName}}, streak={{ctx.CurrentStreak}} days,
-    completed {{ctx.CompletedTodosYesterday}} todos yesterday.
+            You are a friendly life coach. Be concise and warm.
+            User info: name={{ctx.UserFirstName}}, streak={{ctx.CurrentStreak}} days,
+            completed {{ctx.CompletedTodosYesterday}} todos yesterday.
 
-    Respond ONLY with valid JSON:
-    {"task": "one small actionable task under 10 words", "message": "one warm motivational sentence under 20 words"}
-    """;
+            Respond ONLY with valid JSON, no markdown, no extra text:
+            {"task": "one small actionable task under 10 words", "message": "one warm motivational sentence under 20 words"}
+            """;
 
         var requestBody = new
         {
